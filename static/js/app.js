@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize global variables
     let map, heatLayer, clusterMap, clusterMarkers = [];
-    let crimeData = [];
+    let currentCrimeData = []; // To store the current crime data for table operations
+    let tableSortBy = 'Date';
+    let tableSortDirection = 'desc';
+    let tablePageSize = 10;
+    let tableCurrentPage = 1;
+    let tableMaxPage = 1;
     let crimeTypeChart, timeSeriesChart;
     
     // DOM elements
@@ -93,6 +98,76 @@ document.addEventListener('DOMContentLoaded', function() {
             runClusteringButton.addEventListener('click', runClustering);
             runPredictionButton.addEventListener('click', runPrediction);
             analyzeTrendsButton.addEventListener('click', analyzeTrends);
+            
+            // Add table sorting and pagination event listeners
+            document.getElementById('table-sort-by').addEventListener('change', function() {
+                tableSortBy = this.value;
+                tableCurrentPage = 1; // Reset to first page on sort change
+                if (currentCrimeData.length > 0) {
+                    updateTable(currentCrimeData);
+                }
+            });
+            
+            document.getElementById('table-sort-direction').addEventListener('change', function() {
+                tableSortDirection = this.value;
+                if (currentCrimeData.length > 0) {
+                    updateTable(currentCrimeData);
+                }
+            });
+            
+            document.getElementById('table-page-size').addEventListener('change', function() {
+                tablePageSize = parseInt(this.value, 10);
+                tableCurrentPage = 1; // Reset to first page on page size change
+                if (currentCrimeData.length > 0) {
+                    updateTable(currentCrimeData);
+                }
+            });
+            
+            document.getElementById('table-prev-page').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (tableCurrentPage > 1) {
+                    tableCurrentPage--;
+                    updateTable(currentCrimeData);
+                }
+            });
+            
+            document.getElementById('table-next-page').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (tableCurrentPage < tableMaxPage) {
+                    tableCurrentPage++;
+                    updateTable(currentCrimeData);
+                }
+            });
+            
+            // Add click event for table headers for column sorting
+            document.querySelectorAll('#crime-table th[data-sort]').forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortField = this.getAttribute('data-sort');
+                    if (sortField) {
+                        // Toggle direction if clicking on the same column
+                        if (tableSortBy === sortField) {
+                            tableSortDirection = tableSortDirection === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            tableSortBy = sortField;
+                            tableSortDirection = 'asc'; // Default to ascending for new column
+                        }
+                        
+                        // Update the sort by dropdown to match
+                        const sortBySelect = document.getElementById('table-sort-by');
+                        if (sortBySelect) {
+                            sortBySelect.value = tableSortBy;
+                        }
+                        
+                        // Update the sort direction dropdown to match
+                        const sortDirSelect = document.getElementById('table-sort-direction');
+                        if (sortDirSelect) {
+                            sortDirSelect.value = tableSortDirection;
+                        }
+                        
+                        updateTable(currentCrimeData);
+                    }
+                });
+            });
             
             // Add tab switching handlers to resize maps
             document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
@@ -294,80 +369,80 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function loadData() {
         try {
-            showLoading();
+            console.log('Loading data with filters:', 
+                       yearFilterElement.value ? `year=${yearFilterElement.value}` : 'none',
+                       crimeTypeFilterElement.value ? `type=${crimeTypeFilterElement.value}` : '',
+                       districtFilterElement.value ? `district=${districtFilterElement.value}` : '');
             
-            // Get filter values
-            const year = yearFilterElement.value;
-            const crimeType = crimeTypeFilterElement.value;
-            const district = districtFilterElement.value;
+            showLoading();
             
             // Build query string
             let queryParams = new URLSearchParams();
-            if (year) queryParams.append('year', year);
-            if (crimeType) queryParams.append('type', crimeType);
-            if (district) queryParams.append('district', district);
-            
+            if (yearFilterElement.value) queryParams.append('year', yearFilterElement.value);
+            if (crimeTypeFilterElement.value) queryParams.append('type', crimeTypeFilterElement.value);
+            if (districtFilterElement.value) queryParams.append('district', districtFilterElement.value);
             const queryString = queryParams.toString();
-            console.log('Loading data with filters:', queryString || 'none');
             
-            // Load primary data first (crime data table)
             try {
-                const dataResponse = await fetch(`/api/crime-data?${queryString}`);
-                if (!dataResponse.ok) {
-                    throw new Error(`Crime data request failed with status ${dataResponse.status}`);
-                }
-                
-                // Get the crime data and update the table
-                crimeData = await dataResponse.json();
-                console.log(`Loaded ${crimeData.length} crime records`);
-                
-                // Update the table with the data
-                updateTable(crimeData);
-            } catch (crimeDataError) {
-                console.error('Error loading crime data:', crimeDataError);
-                crimeData = [];
-                // Clear table
-                const tableBody = document.querySelector('#crime-table tbody');
-                if (tableBody) {
-                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data available</td></tr>';
-                }
-            }
-            
-            // Check if map is initialized before trying to update the heatmap
-            if (!map) {
-                console.error('Map is not initialized, cannot update heatmap');
-                // Wait a moment and check again
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (!map) {
-                    console.warn('Map still not initialized after waiting');
-                }
-            }
-            
-            // Load heatmap data
-            if (map) {
-                try {
-                    // Fetch heatmap data
-                    const heatmapResponse = await fetch(`/api/heatmap-data?${queryString}`);
-                    if (!heatmapResponse.ok) throw new Error(`Heatmap data request failed with status ${heatmapResponse.status}`);
-                    const heatmapData = await heatmapResponse.json();
-                    
-                    console.log(`Received ${heatmapData.length} heatmap data points`);
-                    
-                    // Update heatmap
-                    updateHeatmap(heatmapData);
-                } catch (error) {
-                    console.error('Error fetching heatmap data:', error);
-                    // Handle empty heatmap
-                    if (map) {
-                        updateHeatmap([[41.8781, -87.6298]]); // Default to Chicago center
-                    }
-                }
-            }
-            
-            // Load remaining data in parallel
-            try {
+                // Fetch data in parallel for better performance
                 await Promise.all([
+                    // Load crime data
+                    (async () => {
+                        try {
+                            // Fetch crime data for table
+                            const crimeResponse = await fetch(`/api/crime-data?${queryString}`);
+                            if (!crimeResponse.ok) throw new Error(`Crime data request failed with status ${crimeResponse.status}`);
+                            const crimeData = await crimeResponse.json();
+                            
+                            // Update table with crime data
+                            updateTable(crimeData);
+                            
+                            // Store the crime data for later use
+                            currentCrimeData = [...crimeData];
+                            
+                            // Log the received data length
+                            console.log(`Received ${crimeData.length.toLocaleString()} crime data records`);
+                        } catch (error) {
+                            console.error('Error loading crime data:', error);
+                            currentCrimeData = []; // Clear on error
+                            updateTable([]); // Update table with empty data
+                            throw error; // Re-throw to be caught by the outer try/catch
+                        }
+                    })(),
+                    
+                    // Load heatmap data
+                    (async () => {
+                        try {
+                            // Check if map is initialized before trying to update the heatmap
+                            if (!map) {
+                                console.error('Map is not initialized, cannot update heatmap');
+                                // Wait a moment and check again
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                
+                                if (!map) {
+                                    console.warn('Map still not initialized after waiting');
+                                    return; // Skip heatmap update if map is still not ready
+                                }
+                            }
+                            
+                            // Fetch heatmap data
+                            const heatmapResponse = await fetch(`/api/heatmap-data?${queryString}`);
+                            if (!heatmapResponse.ok) throw new Error(`Heatmap data request failed with status ${heatmapResponse.status}`);
+                            const heatmapData = await heatmapResponse.json();
+                            
+                            console.log(`Received ${heatmapData.length} heatmap data points`);
+                            
+                            // Update heatmap
+                            updateHeatmap(heatmapData);
+                        } catch (error) {
+                            console.error('Error fetching heatmap data:', error);
+                            // Handle empty heatmap
+                            if (map) {
+                                updateHeatmap([[41.8781, -87.6298]]); // Default to Chicago center
+                            }
+                        }
+                    })(),
+                    
                     // Load summary data
                     (async () => {
                         try {
@@ -665,16 +740,89 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if we have data
         if (!crimeData || crimeData.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No data available</td></tr>';
+            
+            // Update table info and pagination
+            document.getElementById('table-showing-start').textContent = '0';
+            document.getElementById('table-showing-end').textContent = '0';
+            document.getElementById('table-total-entries').textContent = '0';
+            
+            // Clear pagination
+            const pagination = document.getElementById('table-pagination');
+            if (pagination) {
+                pagination.innerHTML = `
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" id="table-prev-page">Previous</a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link" href="#">1</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" id="table-next-page">Next</a>
+                    </li>
+                `;
+            }
+            
             return;
         }
         
-        // Display up to 100 records
-        const displayData = crimeData.slice(0, 100);
+        // Store the current crime data for sorting/pagination
+        currentCrimeData = [...crimeData];
+        
+        // Sort data based on current sort settings
+        const sortedData = [...crimeData].sort((a, b) => {
+            let aValue = a[tableSortBy];
+            let bValue = b[tableSortBy];
+            
+            // Handle special cases and data types
+            if (tableSortBy === 'Date') {
+                // Convert to date objects for comparison
+                aValue = a.Date ? new Date(a.Date) : new Date(0);
+                bValue = b.Date ? new Date(b.Date) : new Date(0);
+                
+                // Check if dates are valid
+                if (isNaN(aValue.getTime())) aValue = new Date(0);
+                if (isNaN(bValue.getTime())) bValue = new Date(0);
+            } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+                // Case-insensitive string comparison
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            } else if (aValue === null || aValue === undefined) {
+                // Handle null/undefined values
+                aValue = tableSortDirection === 'asc' ? '\uffff' : '';
+            } else if (bValue === null || bValue === undefined) {
+                // Handle null/undefined values
+                bValue = tableSortDirection === 'asc' ? '\uffff' : '';
+            }
+            
+            // Perform comparison based on sort direction
+            if (tableSortDirection === 'asc') {
+                return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            } else {
+                return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+            }
+        });
+        
+        // Calculate pagination
+        const totalEntries = sortedData.length;
+        tableMaxPage = Math.ceil(totalEntries / tablePageSize);
+        
+        // Ensure current page is valid
+        if (tableCurrentPage > tableMaxPage) {
+            tableCurrentPage = tableMaxPage > 0 ? tableMaxPage : 1;
+        }
+        
+        // Calculate starting and ending indices for current page
+        const startIndex = (tableCurrentPage - 1) * tablePageSize;
+        const endIndex = Math.min(startIndex + tablePageSize, totalEntries);
+        
+        // Get data for current page
+        const pageData = sortedData.slice(startIndex, endIndex);
         
         // Create a document fragment for better performance
         const fragment = document.createDocumentFragment();
         
-        displayData.forEach(crime => {
+        // Add rows for current page
+        pageData.forEach(crime => {
             const row = document.createElement('tr');
             
             try {
@@ -706,11 +854,116 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add all rows at once
         tableBody.appendChild(fragment);
         
-        // Add a message if we truncated the data
-        if (crimeData.length > 100) {
-            const infoRow = document.createElement('tr');
-            infoRow.innerHTML = `<td colspan="6" class="text-center text-muted">Showing 100 of ${crimeData.length.toLocaleString()} records</td>`;
-            tableBody.appendChild(infoRow);
+        // Update table info
+        document.getElementById('table-showing-start').textContent = startIndex + 1;
+        document.getElementById('table-showing-end').textContent = endIndex;
+        document.getElementById('table-total-entries').textContent = totalEntries;
+        
+        // Update pagination
+        updateTablePagination();
+    }
+    
+    // Function to update the table pagination controls
+    function updateTablePagination() {
+        const pagination = document.getElementById('table-pagination');
+        if (!pagination) return;
+        
+        // Clear existing pagination
+        pagination.innerHTML = '';
+        
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${tableCurrentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" id="table-prev-page">Previous</a>`;
+        pagination.appendChild(prevLi);
+        
+        // Add page numbers
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, tableCurrentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(tableMaxPage, startPage + maxPagesToShow - 1);
+        
+        // Adjust if we're near the end
+        if (endPage - startPage + 1 < maxPagesToShow && startPage > 1) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+        
+        // Add first page and ellipsis if needed
+        if (startPage > 1) {
+            const firstLi = document.createElement('li');
+            firstLi.className = 'page-item';
+            firstLi.innerHTML = `<a class="page-link" href="#" data-page="1">1</a>`;
+            pagination.appendChild(firstLi);
+            
+            if (startPage > 2) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.className = 'page-item disabled';
+                ellipsisLi.innerHTML = `<a class="page-link" href="#">...</a>`;
+                pagination.appendChild(ellipsisLi);
+            }
+        }
+        
+        // Add page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.className = `page-item ${i === tableCurrentPage ? 'active' : ''}`;
+            pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+            pagination.appendChild(pageLi);
+        }
+        
+        // Add last page and ellipsis if needed
+        if (endPage < tableMaxPage) {
+            if (endPage < tableMaxPage - 1) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.className = 'page-item disabled';
+                ellipsisLi.innerHTML = `<a class="page-link" href="#">...</a>`;
+                pagination.appendChild(ellipsisLi);
+            }
+            
+            const lastLi = document.createElement('li');
+            lastLi.className = 'page-item';
+            lastLi.innerHTML = `<a class="page-link" href="#" data-page="${tableMaxPage}">${tableMaxPage}</a>`;
+            pagination.appendChild(lastLi);
+        }
+        
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${tableCurrentPage === tableMaxPage ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="#" id="table-next-page">Next</a>`;
+        pagination.appendChild(nextLi);
+        
+        // Add event listeners for page links
+        pagination.querySelectorAll('a[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.getAttribute('data-page'), 10);
+                if (page !== tableCurrentPage) {
+                    tableCurrentPage = page;
+                    updateTable(currentCrimeData);
+                }
+            });
+        });
+        
+        // Re-attach event listeners for prev/next buttons
+        const prevButton = document.getElementById('table-prev-page');
+        if (prevButton) {
+            prevButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (tableCurrentPage > 1) {
+                    tableCurrentPage--;
+                    updateTable(currentCrimeData);
+                }
+            });
+        }
+        
+        const nextButton = document.getElementById('table-next-page');
+        if (nextButton) {
+            nextButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (tableCurrentPage < tableMaxPage) {
+                    tableCurrentPage++;
+                    updateTable(currentCrimeData);
+                }
+            });
         }
     }
     
@@ -1001,16 +1254,53 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(`Failed to fetch crime trends: ${response.status} ${response.statusText}`);
                 }
                 
-                // Get the text response first to check for valid JSON
+                // Get the text response first
                 const textResponse = await response.text();
                 let trendData;
                 
                 try {
-                    // Try to parse the JSON
-                    trendData = JSON.parse(textResponse);
+                    // Custom JSON parsing to handle Infinity values
+                    // First replace Infinity with a placeholder
+                    const sanitizedText = textResponse
+                        .replace(/:\s*Infinity/g, ':"__INFINITY__"')
+                        .replace(/:\s*-Infinity/g, ':"__NEGATIVE_INFINITY__"');
+                    
+                    // Parse the sanitized JSON
+                    trendData = JSON.parse(sanitizedText);
+                    
+                    // Replace placeholders with actual JavaScript values
+                    if (trendData.increasing_crimes) {
+                        trendData.increasing_crimes.forEach(crime => {
+                            if (crime.avg_monthly_change === "__INFINITY__") {
+                                crime.avg_monthly_change = 999; // Use a large number instead of Infinity
+                            } else if (crime.avg_monthly_change === "__NEGATIVE_INFINITY__") {
+                                crime.avg_monthly_change = -999;
+                            }
+                        });
+                    }
+                    
+                    if (trendData.decreasing_crimes) {
+                        trendData.decreasing_crimes.forEach(crime => {
+                            if (crime.avg_monthly_change === "__INFINITY__") {
+                                crime.avg_monthly_change = 999;
+                            } else if (crime.avg_monthly_change === "__NEGATIVE_INFINITY__") {
+                                crime.avg_monthly_change = -999;
+                            }
+                        });
+                    }
                 } catch (jsonError) {
                     console.error('Invalid JSON response:', textResponse);
-                    throw new Error('Server returned invalid JSON');
+                    console.error('JSON parse error:', jsonError);
+                    
+                    // Try a more aggressive approach - manually handle Infinity
+                    try {
+                        // First try a direct replacement approach
+                        const fixedText = textResponse.replace(/: Infinity/g, ': 999').replace(/: -Infinity/g, ': -999');
+                        trendData = JSON.parse(fixedText);
+                    } catch (error) {
+                        console.error('Second parsing attempt failed:', error);
+                        throw new Error('Server returned invalid JSON');
+                    }
                 }
                 
                 console.log('Received trend data:', trendData);

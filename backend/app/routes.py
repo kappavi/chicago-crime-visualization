@@ -6,6 +6,20 @@ from datetime import datetime
 from collections import Counter
 from .analytics import perform_cluster_analysis, predict_arrest_probability, analyze_crime_trends
 import os
+import csv
+
+# Custom JSON encoder to handle special values like NaN, Infinity
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, float):
+            if np.isnan(obj):
+                return None
+            if np.isinf(obj):
+                if obj > 0:
+                    return 40.0  # Use a more reasonable maximum percentage
+                else:
+                    return -40.0  # Use a more reasonable minimum percentage
+        return super(CustomJSONEncoder, self).default(obj)
 
 main_bp = Blueprint('main', __name__)
 
@@ -302,7 +316,43 @@ def get_crime_trends():
     if crime_data is None:
         crime_data = load_data()
     
-    # Analyze trends
-    trend_results = analyze_crime_trends(crime_data)
+    # Query parameters for filtering
+    year = request.args.get('year')
+    crime_type = request.args.get('type')
+    district = request.args.get('district')
+    
+    # Apply filters
+    filtered_data = crime_data.copy()
+    if year:
+        filtered_data = filtered_data[filtered_data['Year'] == int(year)]
+    if crime_type:
+        filtered_data = filtered_data[filtered_data['Primary Type'] == crime_type]
+    if district:
+        filtered_data = filtered_data[filtered_data['District'] == int(district)]
+    
+    # Analyze trends with the filtered data
+    trend_results = analyze_crime_trends(filtered_data)
+    
+    # Additional check for infinity values or extreme values
+    if 'increasing_crimes' in trend_results:
+        # Filter out any remaining infinity values
+        trend_results['increasing_crimes'] = [
+            {
+                'crime_type': crime['crime_type'],
+                'avg_monthly_change': min(40.0, abs(crime['avg_monthly_change'])) if crime['avg_monthly_change'] > 0 else crime['avg_monthly_change']
+            }
+            for crime in trend_results['increasing_crimes']
+            if not np.isinf(crime['avg_monthly_change']) and not np.isnan(crime['avg_monthly_change'])
+        ]
+    
+    if 'decreasing_crimes' in trend_results:
+        trend_results['decreasing_crimes'] = [
+            {
+                'crime_type': crime['crime_type'],
+                'avg_monthly_change': max(-40.0, -abs(crime['avg_monthly_change'])) if crime['avg_monthly_change'] < 0 else crime['avg_monthly_change']
+            }
+            for crime in trend_results['decreasing_crimes']
+            if not np.isinf(crime['avg_monthly_change']) and not np.isnan(crime['avg_monthly_change']) 
+        ]
     
     return jsonify(trend_results) 

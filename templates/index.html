@@ -382,22 +382,71 @@
                         Crime Data Table
                     </div>
                     <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="table-sort-by" class="form-label">Sort by:</label>
+                                <select id="table-sort-by" class="form-select">
+                                    <option value="Date">Date</option>
+                                    <option value="Primary Type">Crime Type</option>
+                                    <option value="Description">Description</option>
+                                    <option value="Location Description">Location</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="table-sort-direction" class="form-label">Order:</label>
+                                <select id="table-sort-direction" class="form-select">
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc" selected>Descending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="table-page-size" class="form-label">Entries per page:</label>
+                                <select id="table-page-size" class="form-select">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-striped" id="crime-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Primary Type</th>
-                                        <th>Description</th>
-                                        <th>Location</th>
-                                        <th>Arrest</th>
-                                        <th>Domestic</th>
+                                        <th data-sort="Date">Date</th>
+                                        <th data-sort="Primary Type">Primary Type</th>
+                                        <th data-sort="Description">Description</th>
+                                        <th data-sort="Location Description">Location</th>
+                                        <th data-sort="Arrest">Arrest</th>
+                                        <th data-sort="Domestic">Domestic</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <!-- Data will be populated via JavaScript -->
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div id="table-info" class="text-muted">
+                                    Showing <span id="table-showing-start">0</span> to <span id="table-showing-end">0</span> of <span id="table-total-entries">0</span> entries
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <nav aria-label="Crime table pagination">
+                                    <ul class="pagination justify-content-end" id="table-pagination">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" id="table-prev-page">Previous</a>
+                                        </li>
+                                        <li class="page-item active">
+                                            <a class="page-link" href="#">1</a>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" id="table-next-page">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -409,11 +458,11 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Chicago Crime Data Visualization</h5>
+                    <h5>Interpreting Crime in Chicago</h5>
                     <p>An interactive visualization of crime patterns in Chicago</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <p>&copy; 2023 Data Visualization Project</p>
+                    <p>&copy; Team 7: Avi Kapadia, Ati Jain, Srikar Bhumireddy, Aadit Trivedi, Tanuj Dunthuluri, Aditya Magesh Kumar</p>
                 </div>
             </div>
         </div>
