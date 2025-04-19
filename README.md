@@ -26,7 +26,7 @@ An interactive web application for visualizing and analyzing crime patterns in C
 ```
 pip install -r requirements.txt
 ```
-3. Place the Chicago crime dataset at `data/raw_data.csv`
+3. Place the [Chicago crime dataset](https://www.kaggle.com/datasets/georgehanyfouad/crime-prediction-in-chicago-in-2022?resource=download) at `data/raw_data.csv`
 4. Start the application:
 ```
 cd backend
