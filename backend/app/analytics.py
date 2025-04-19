@@ -7,12 +7,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from datetime import datetime
 
-def perform_cluster_analysis(df):
+def perform_cluster_analysis(df, crime_type=None):
     """
     Perform DBSCAN clustering on crime locations to identify hotspots.
     
     Args:
         df: DataFrame containing crime data with Latitude and Longitude
+        crime_type: Optional crime type being analyzed
         
     Returns:
         Dictionary with cluster information
@@ -43,7 +44,8 @@ def perform_cluster_analysis(df):
         return {
             'n_clusters': 0,
             'cluster_centers': [],
-            'cluster_counts': {}
+            'cluster_counts': {},
+            'crime_type': crime_type
         }
     
     # Count points in each cluster
@@ -69,7 +71,8 @@ def perform_cluster_analysis(df):
     return {
         'n_clusters': n_clusters,
         'cluster_centers': cluster_centers,
-        'cluster_counts': cluster_counts.to_dict()
+        'cluster_counts': cluster_counts.to_dict(),
+        'crime_type': crime_type
     }
 
 def predict_arrest_probability(df):
@@ -439,4 +442,4 @@ def _fallback_trend_analysis(df):
         ]
     }
     
-    return result 
+    return result

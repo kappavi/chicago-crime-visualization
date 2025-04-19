@@ -289,8 +289,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     minZoom: 9,
                     maxZoom: 16,
                     attributionControl: true,
-                    fadeAnimation: false, // Disable animations for performance
-                    markerZoomAnimation: false // Disable animations for performance
+                    fadeAnimation: false,
+                    markerZoomAnimation: false
                 });
                 
                 // Add a base map layer - use a faster CDN
@@ -1083,8 +1083,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateClusterInfo(clusterData) {
-        // Update cluster count
-        document.getElementById('clusters-count').textContent = clusterData.n_clusters || 0;
+        // Update cluster count with crime type if available
+        const clustersCountElement = document.getElementById('clusters-count');
+        if (clusterData.crime_type) {
+            clustersCountElement.textContent = `${clusterData.n_clusters || 0} clusters identified for "${clusterData.crime_type}"`;
+        } else {
+            clustersCountElement.textContent = `${clusterData.n_clusters || 0} clusters identified`;
+        }
         
         // Update cluster list
         const clusterListElement = document.getElementById('cluster-list');
@@ -1124,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 Crimes: ${cluster.count.toLocaleString()}<br>
                 Latitude: ${cluster.lat.toFixed(4)}<br>
                 Longitude: ${cluster.lon.toFixed(4)}
+                ${clusterData.crime_type ? `<br>Type: ${clusterData.crime_type}` : ''}
             `);
             
             marker.addTo(clusterGroup);
@@ -1468,4 +1474,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-}); 
+});

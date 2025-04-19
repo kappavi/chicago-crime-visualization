@@ -272,7 +272,8 @@ def get_clusters():
         return jsonify({
             'n_clusters': 0,
             'cluster_centers': [],
-            'cluster_counts': {}
+            'cluster_counts': {},
+            'crime_type': crime_type
         })
     
     # Perform clustering (limit to 15,000 points for performance)
@@ -283,7 +284,7 @@ def get_clusters():
     sample_data = sample_data[['Latitude', 'Longitude']].copy()
     
     # Perform the clustering
-    cluster_results = perform_cluster_analysis(sample_data)
+    cluster_results = perform_cluster_analysis(sample_data, crime_type)
     
     return jsonify(cluster_results)
 
@@ -355,4 +356,4 @@ def get_crime_trends():
             if not np.isinf(crime['avg_monthly_change']) and not np.isnan(crime['avg_monthly_change']) 
         ]
     
-    return jsonify(trend_results) 
+    return jsonify(trend_results)
