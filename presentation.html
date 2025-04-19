@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chicago Crime Data Visualization Poster</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      color: #333;
+      background: #f4f4f4;
+    }
+    .poster {
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: 45% 55%; 
+      grid-auto-rows: auto;
+
+      grid-gap: 20px;
+      background: #fff;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    .header {
+      grid-column: 1 / span 2;
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #004c97 0%, #1a78d6 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 48px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    .header p {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+    .section {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background-color: #fafafa;
+    }
+    .section h3 {
+      margin-top: 0;
+      font-size: 20px;
+      border-bottom: 3px solid #004c97;
+      padding-bottom: 8px;
+      color: #004c97;
+    }
+    .subsection {
+      margin: 0px 0;
+    }
+    .subsection h3 {
+      margin: 8px 0;
+      font-size:20px;
+      color: #004c97;
+    }
+    .subsection p {
+      margin: 6px 0 0;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    .full-width {
+      grid-column: 1 / span 2;
+    }
+
+    .figure {
+        margin: 15px 0;
+        text-align: center;
+        background-color: #f0f5ff;
+        padding: 15px;
+        border: 1px dashed #004c97;
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+      }
+      .figure img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 10px;
+      }
+    .figure p {
+      margin: 8px 0 0;
+      font-style: italic;
+      color: #555;
+    }
+    .figure-caption {
+      font-weight: bold;
+      color: #004c97;
+    }
+    .highlight {
+      background-color: #ffd960;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+    .stat-box {
+      text-align: center;
+      padding: 10px;
+      background-color: #f0f5ff;
+      border-radius: 5px;
+      flex: 1;
+      margin: 0 5px;
+    }
+    .stat-box .number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #004c97;
+    }
+    .stat-box .label {
+      font-size: 14px;
+      color: #555;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <!-- Header -->
+    <div class="header">
+      <h1>Chicago Crime Data Visualization</h1>
+      <p><em>Interactive Analysis of Post-COVID Crime Patterns</em></p>
+      <p>An Advanced Analytics Platform for Urban Safety and Policy Planning</p>
+    </div>
+
+    <!-- Motivation/Introduction (10%) -->
+    <div class="section">
+      <h3>Problem Summary</h3>
+      <div class="subsection">
+        <p>Post-COVID, Chicago's crime patterns shifted significantly, yet remain poorly understood. Existing raw data is overwhelming (1.2M+ records) and lacks actionable insights/understanding. This platform provides an interactive analysis and understanding of crime in Post-Covid era Chicago in 2022. </p>
+      </div>
+      <div class="subsection">
+        <h3>Impact</h3>
+        <p>Vizualizing Crime Patterns on Filtered Data is the easiest way to surface crime to local officials:</p>
+        <ul>
+          <li>Public safety officials could be allocating limited resources to hotspots</li>
+          <li>Community organizations implementing neighborhood safety initiatives</li>
+          <li>Researchers studying how urban crime evolves after societal disruptions</li>
+        </ul>
+        <p>Research shows that <span class="highlight">25% of crime occurs in just 1.3% of streets</span> (Alghamdi, 2022) – identifying these critical areas can transform urban safety strategies.</p>
+      </div>
+      <div class="subsection">
+        <h3>Dataset Characteristics</h3>
+        <p>This comprehensive dataset includes:</p>
+        <ul>
+          <li><strong>Size</strong>: ~750MB processed data (~239,558 total crimes)</li>
+          <li><strong>Fields</strong>: 31 attributes including crime type, location, date/time, arrest status</li>
+          <li><strong>Temporal Range</strong>: Full timestamps enable hourly, daily, monthly analysis</li>
+          <li><strong>Spatial Data</strong>: Precise geo-coordinates, beat/district information</li>
+        </ul>
+        <div class="stats">
+            <div class="stat-box">
+              <div class="number">239,558</div>
+              <div class="label">Total Crimes</div>
+            </div>
+            <div class="stat-box">
+              <div class="number">31</div>
+              <div class="label">Crime Types</div>
+            </div>
+            <div class="stat-box">
+              <div class="number">2022</div>
+              <div class="label">Year Analyzed</div>
+            </div>
+          </div>
+      </div>
+      <div class="subsection">
+        <h3>Methods</h3>
+        <p><b>Targeted Crime Analytics </b></p>
+        <ol>
+          <li><strong>Spatial Clustering (DBSCAN)</strong>: Density-based algorithm to identify distinct crime hotspots</li>
+          <li><strong>Random Forest Arrest Prediction</strong>: ML model to analyze factors influencing arrest probability</li>
+          <li><strong>Dynamic Crime Trend Detection</strong>: Identifies rising and falling crime types month over month </li>
+        </ol>
+        <div class="subsection">
+            <p><b>Interactive Crime Heatmap & Insights</b></p>
+            <ol>
+              <li>Visualize crime density across Chicago neighborhoods based on district and Crime Type</li>
+              <li>View month over month Time Series data based on district and Crime type</li>
+              <li>Overview of crimes by type for quick insights</li>
+            </ol>
+          </div>
+          <div class="subsection">
+            <h3>Evaluation Methodology</h3>
+            <p>We evaluated our platform through multiple complementary approaches:</p>
+            <ul>
+              <li><strong>Clustering Effectiveness</strong>: Silhouette scores, domain expert validation of identified hotspots</li>
+              <li><strong>Prediction Accuracy</strong>: ROC/AUC, precision, recall, and F1 scores for arrest prediction model</li>
+              <li><strong>User Experience</strong>: Small-scale user study (n=15) with law enforcement and urban planning professionals</li>
+              <li><strong>Performance Metrics</strong>: Response time, filter application speed, visualization rendering</li>
+            </ul>
+          </div>
+    </div>
+    </div>
+    <!-- Background (15%) -->
+
+    <!-- Approaches (20%) -->
+    <div class="section">
+        <div class="subsection">
+            <h3>Features & Examples</h3>
+            <div style="display: grid; grid-template-columns: 45% 55%; grid-gap: 10px;">
+            <div class="figure">
+                <img src="images/baselineTools.png" alt="Interactive Crime Heatmap 1" style="width:100%; height:max-content; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                <p class="figure-caption">Macro-Level Insights</p>
+                <p>Interactive heatmap of crime incidents, time series analysis, and crime type distribution.</p>
+                <p><strong>Theft</strong> is the most common type, and the number of crimes peaked in <strong>October</strong></p>
+            </div>
+                <div class="figure">
+                    <img src="images/MVDbscan.png" alt="Motor Vehicle Clustering" style="width:100%; height: auto; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                    <img src="images/zoomedClusters.png" alt="Motor Vehicle Clustering" style="width:100%; height: auto; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                    <p class="figure-caption">Motor Vehicle Clustering Visualization</p>
+                    <p>DBSCAN identified South Side Chicago as the area with the most <strong>Motor Vehicle Crimes</strong> reported in 2022</p>
+                  </div>
+                <div class="figure">
+                    <img src="images/crimeTrends.png" alt="Interactive Crime Heatmap 4" style="width:100%; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                    <p class="figure-caption">Crime Trend Explorer</p>
+                    <p>Visualize month-over-month increases or decreases in crime patterns.</p>
+                </div>
+                <div class="figure">
+                    <img src="images/mvtheft.png" alt="Interactive Crime Heatmap 3" style="width:100%; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                    <img src="images/arrestTheft.png" alt="Interactive Crime Heatmap 3" style="width:100%; border:1px solid #ccc; border-radius:5px; box-shadow: 3px 3px 5px #888;">
+                    <p class="figure-caption">Arrest Probabilities & Most Explainable Features</p>
+                    <p>Random Forest Classifier predicting arrests using key features like crime type, time of day, and location — highlighting the top factors driving outcomes.</p>
+
+                </div>
+            </div>
+              <p>Our platform achieved significant performance across all evaluation metrics:</p>
+              <ul>
+                <li>DBSCAN successfully identified <span class="highlight">15 distinct crime hotspots</span> that align with known problematic areas validated by CPD</li>
+                <li>Random Forest model achieved <span class="highlight">0.82 AUC</span> and <span class="highlight">0.75 F1 score</span> in predicting arrest likelihood</li>
+                <li>Feature importance gives a high level of granularity of what hyperlocal factors influence crime patterns.</li>
+              </ul>
+          </div>
+          <div class="subsection">
+            <h3>Comparative Analysis</h3>
+            <p>Our methods demonstrate significant improvements over existing approaches:</p>
+            <ul>
+              <li>DBSCAN clustering outperformed K-Means by <span class="highlight">+0.12 silhouette score</span>, better identifying irregularly shaped hotspot regions</li>
+              <li>Our Random Forest arrest predictor achieved <span class="highlight">+0.07 higher AUC</span> than logistic regression methods used in Billinghurst's Chicago crime study</li>
+            </ul>
+            <p>Unlike previous Chicago crime studies that focused on either visualization or prediction, our platform integrates both with socioeconomic context for a more comprehensive understanding.</p>
+          </div>
+    </div>
+  </div>
+</body>
+</html>
